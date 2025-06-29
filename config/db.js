@@ -1,10 +1,10 @@
 // config/db.js
-const { Pool } = require('pg'); // Using node-postgres for PostgreSQL
+const { Pool } = require('pg');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
-    rejectUnauthorized: false // Required for some Neon connections
+    rejectUnauthorized: false 
   },
   max: 10, 
   idleTimeoutMillis: 50000,
