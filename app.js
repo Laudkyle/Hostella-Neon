@@ -30,7 +30,7 @@ app.use(limiter);
 
 // CORS configuration
 const corsOptions = {
-  origin: process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',') : ['http://localhost:3000'],
+  origin:true,
   credentials: true,
   optionsSuccessStatus: 200
 };
