@@ -12,7 +12,7 @@ const realtorRoutes = require('./routes/realtorRoutes');
 const hostelRoutes = require('./routes/hostelRoutes');
 const hostelRoomRoutes = require('./routes/hostelRoomRoutes');
 const amenityRoutes = require('./routes/amenitiesRoutes');
-const resverationRoutes = require('./routes/reservationRoutes');
+const reservationRoutes = require('./routes/reservationRoutes');
 const searchRoutes = require('./routes/searchRoutes');
 const errorHandler = require('./middleware/errorHandler');
 
