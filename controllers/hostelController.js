@@ -25,11 +25,11 @@ exports.getHostelById = async (req, res, next) => {
   }
 };
 
-// Get hostels by realtor (realtor only)
+// Get hostels by realtor (realtor/admin only)
 exports.getMyHostels = async (req, res, next) => {
   try {
-    if (req.user.role !== 'realtor') {
-      return res.status(403).json({ message: 'Access denied. Realtors only.' });
+    if (!['realtor', 'admin'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Access denied. Realtors/Admins only.' });
     }
     
     const hostels = await Hostel.findByRealtorId(req.user.id);
@@ -39,16 +39,15 @@ exports.getMyHostels = async (req, res, next) => {
   }
 };
 
-// Create new hostel (realtor only)
+// Create new hostel (realtor/admin only)
 exports.createHostel = async (req, res, next) => {
   try {
-    if (req.user.role !== 'realtor') {
-      return res.status(403).json({ message: 'Access denied. Realtors only.' });
+    if (!['realtor', 'admin'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Access denied. Realtors/Admins only.' });
     }
 
     const { name, address, description, contact_email, contact_phone } = req.body;
     
-    // Validate required fields
     if (!name || !address) {
       return res.status(400).json({ message: 'Name and address are required' });
     }
@@ -69,11 +68,11 @@ exports.createHostel = async (req, res, next) => {
   }
 };
 
-// Update hostel (realtor only - and only their own hostels)
+// Update hostel (realtor/admin only - admin can update all, realtor only their own)
 exports.updateHostel = async (req, res, next) => {
   try {
-    if (req.user.role !== 'realtor') {
-      return res.status(403).json({ message: 'Access denied. Realtors only.' });
+    if (!['realtor', 'admin'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Access denied. Realtors/Admins only.' });
     }
 
     const hostel = await Hostel.findById(req.params.id);
@@ -81,8 +80,7 @@ exports.updateHostel = async (req, res, next) => {
       return res.status(404).json({ message: 'Hostel not found' });
     }
 
-    // Check if the realtor owns this hostel
-    if (hostel.realtor_id !== req.user.id) {
+    if (req.user.role === 'realtor' && hostel.realtor_id !== req.user.id) {
       return res.status(403).json({ message: 'Access denied. You can only update your own hostels.' });
     }
 
@@ -106,11 +104,11 @@ exports.updateHostel = async (req, res, next) => {
   }
 };
 
-// Delete hostel (realtor only - and only their own hostels)
+// Delete hostel (realtor/admin only - admin can delete all, realtor only their own)
 exports.deleteHostel = async (req, res, next) => {
   try {
-    if (req.user.role !== 'realtor') {
-      return res.status(403).json({ message: 'Access denied. Realtors only.' });
+    if (!['realtor', 'admin'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Access denied. Realtors/Admins only.' });
     }
 
     const hostel = await Hostel.findById(req.params.id);
@@ -118,8 +116,7 @@ exports.deleteHostel = async (req, res, next) => {
       return res.status(404).json({ message: 'Hostel not found' });
     }
 
-    // Check if the realtor owns this hostel
-    if (hostel.realtor_id !== req.user.id) {
+    if (req.user.role === 'realtor' && hostel.realtor_id !== req.user.id) {
       return res.status(403).json({ message: 'Access denied. You can only delete your own hostels.' });
     }
 
@@ -130,11 +127,11 @@ exports.deleteHostel = async (req, res, next) => {
   }
 };
 
-// Add amenity to hostel (realtor only)
+// Add amenity to hostel (realtor/admin only)
 exports.addAmenityToHostel = async (req, res, next) => {
   try {
-    if (req.user.role !== 'realtor') {
-      return res.status(403).json({ message: 'Access denied. Realtors only.' });
+    if (!['realtor', 'admin'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Access denied. Realtors/Admins only.' });
     }
 
     const hostel = await Hostel.findById(req.params.id);
@@ -142,8 +139,7 @@ exports.addAmenityToHostel = async (req, res, next) => {
       return res.status(404).json({ message: 'Hostel not found' });
     }
 
-    // Check if the realtor owns this hostel
-    if (hostel.realtor_id !== req.user.id) {
+    if (req.user.role === 'realtor' && hostel.realtor_id !== req.user.id) {
       return res.status(403).json({ message: 'Access denied. You can only modify your own hostels.' });
     }
 
@@ -160,11 +156,11 @@ exports.addAmenityToHostel = async (req, res, next) => {
   }
 };
 
-// Remove amenity from hostel (realtor only)
+// Remove amenity from hostel (realtor/admin only)
 exports.removeAmenityFromHostel = async (req, res, next) => {
   try {
-    if (req.user.role !== 'realtor') {
-      return res.status(403).json({ message: 'Access denied. Realtors only.' });
+    if (!['realtor', 'admin'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Access denied. Realtors/Admins only.' });
     }
 
     const hostel = await Hostel.findById(req.params.id);
@@ -172,8 +168,7 @@ exports.removeAmenityFromHostel = async (req, res, next) => {
       return res.status(404).json({ message: 'Hostel not found' });
     }
 
-    // Check if the realtor owns this hostel
-    if (hostel.realtor_id !== req.user.id) {
+    if (req.user.role === 'realtor' && hostel.realtor_id !== req.user.id) {
       return res.status(403).json({ message: 'Access denied. You can only modify your own hostels.' });
     }
 
