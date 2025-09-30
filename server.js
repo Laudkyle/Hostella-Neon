@@ -1,5 +1,5 @@
 const app = require('./app');
-const { pool } = require('./config/db');
+const pool  = require('./config/db');
 
 const PORT = process.env.PORT || 5000;
 const swaggerUi = require("swagger-ui-express");
