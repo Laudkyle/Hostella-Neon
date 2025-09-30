@@ -47,6 +47,7 @@ module.exports = {
   },
 
   // Configuration constants
+    secret: JWT_SECRET,        
   JWT_SECRET,
   JWT_EXPIRES_IN,
   SALT_ROUNDS
