@@ -23,22 +23,37 @@ exports.getAmenityById = async (req, res, next) => {
   }
 };
 
-// Create amenity (admin only - you might want to add admin role check)
+// Create one or many amenities (admin or realtor)
 exports.createAmenity = async (req, res, next) => {
   try {
-    // Add admin check if you have admin role
-    if (!['realtor', 'admin'].includes(req.user.role)){
-      return res.status(403).json({ message: 'Access denied. Admin only.' });
+    if (!['realtor', 'admin'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Access denied. Admin/Realtor only.' });
     }
 
-    const { name } = req.body;
-    
-    if (!name) {
-      return res.status(400).json({ message: 'Amenity name is required' });
+    let amenities = req.body;
+
+    // Normalize single object to array
+    if (!Array.isArray(amenities)) {
+      amenities = [amenities];
     }
 
-    const amenity = await Amenity.create(name);
-    res.status(201).json(amenity);
+    // Validate all
+    const invalid = amenities.filter(a => !a.name);
+    if (invalid.length > 0) {
+      return res.status(400).json({ message: 'Each amenity must have a name' });
+    }
+
+    // Create amenities
+    const created = [];
+    for (const amenity of amenities) {
+      const newAmenity = await Amenity.create(amenity.name);
+      created.push(newAmenity);
+    }
+
+    res.status(201).json({
+      message: `${created.length} amenity(ies) created successfully`,
+      amenities: created
+    });
   } catch (error) {
     next(error);
   }
