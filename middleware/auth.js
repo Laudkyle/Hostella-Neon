@@ -25,7 +25,7 @@ module.exports = async (req, res, next) => {
 
   try {
     // Verify token
-    const decoded = jwt.verify(token, jwtConfig.secret);
+const decoded = jwt.verify(token, jwtConfig.JWT_SECRET);
     
     // Check if user still exists
     const [user] = await pool.query(
