@@ -10,6 +10,7 @@ const userRoutes = require('./routes/userRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const realtorRoutes = require('./routes/realtorRoutes');
 const hostelRoutes = require('./routes/hostelRoutes');
+const hostelRoomRoutes = require('./routes/hostelRoomRoutes');
 const amenityRoutes = require('./routes/amenitiesRoutes');
 const searchRoutes = require('./routes/searchRoutes');
 const errorHandler = require('./middleware/errorHandler');
@@ -87,6 +88,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/realtors', realtorRoutes);
 app.use('/api/hostels', hostelRoutes);
+app.use('/api/hostels', hostelRoomRoutes);
 app.use('/api/amenities', amenityRoutes);
 app.use('/api/search', searchRoutes);
 
