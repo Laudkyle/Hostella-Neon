@@ -127,7 +127,7 @@ exports.deleteHostel = async (req, res, next) => {
   }
 };
 
-// Add amenity to hostel (realtor/admin only)
+// Add amenity/amenities to hostel (realtor/admin only)
 exports.addAmenityToHostel = async (req, res, next) => {
   try {
     if (!['realtor', 'admin'].includes(req.user.role)) {
@@ -143,20 +143,35 @@ exports.addAmenityToHostel = async (req, res, next) => {
       return res.status(403).json({ message: 'Access denied. You can only modify your own hostels.' });
     }
 
-    const { amenity_id, is_available = true } = req.body;
-    
-    if (!amenity_id) {
-      return res.status(400).json({ message: 'Amenity ID is required' });
+    let amenities = req.body;
+    if (!Array.isArray(amenities)) {
+      amenities = [amenities];
     }
 
-    const result = await Hostel.addAmenity(req.params.id, amenity_id, is_available);
-    res.status(201).json(result);
+    const created = [];
+    for (const amenity of amenities) {
+      if (!amenity.amenity_id) {
+        return res.status(400).json({ message: 'Amenity ID is required for each item' });
+      }
+
+      const result = await Hostel.addAmenity(
+        req.params.id,
+        amenity.amenity_id,
+        amenity.is_available ?? true
+      );
+      created.push(result);
+    }
+
+    res.status(201).json({
+      message: `${created.length} amenity(ies) added to hostel successfully`,
+      amenities: created
+    });
   } catch (error) {
     next(error);
   }
 };
 
-// Remove amenity from hostel (realtor/admin only)
+// Remove amenity/amenities from hostel (realtor/admin only)
 exports.removeAmenityFromHostel = async (req, res, next) => {
   try {
     if (!['realtor', 'admin'].includes(req.user.role)) {
@@ -172,22 +187,33 @@ exports.removeAmenityFromHostel = async (req, res, next) => {
       return res.status(403).json({ message: 'Access denied. You can only modify your own hostels.' });
     }
 
-    const { amenity_id } = req.body;
-    
-    if (!amenity_id) {
-      return res.status(400).json({ message: 'Amenity ID is required' });
+    let amenities = req.body;
+    if (!Array.isArray(amenities)) {
+      amenities = [amenities];
     }
 
-    const result = await Hostel.removeAmenity(req.params.id, amenity_id);
-    if (!result) {
-      return res.status(404).json({ message: 'Amenity not found in hostel' });
+    const removed = [];
+    for (const amenity of amenities) {
+      if (!amenity.amenity_id) {
+        return res.status(400).json({ message: 'Amenity ID is required for each item' });
+      }
+
+      const result = await Hostel.removeAmenity(req.params.id, amenity.amenity_id);
+      if (!result) {
+        return res.status(404).json({ message: `Amenity with id ${amenity.amenity_id} not found in hostel` });
+      }
+      removed.push(amenity.amenity_id);
     }
 
-    res.json({ message: 'Amenity removed from hostel successfully' });
+    res.json({
+      message: `${removed.length} amenity(ies) removed from hostel successfully`,
+      removed
+    });
   } catch (error) {
     next(error);
   }
 };
+
 
 // Get hostel amenities (public endpoint)
 exports.getHostelAmenities = async (req, res, next) => {
