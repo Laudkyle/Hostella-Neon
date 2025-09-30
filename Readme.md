@@ -223,25 +223,37 @@ You can create amenities individually or in bulk.
 ---
 
 ### 3.6 Add Amenities to Hostel 1
+
 **POST** `/api/hostels/1/amenities`
+
 ```json
-{"amenity_id": 1, "is_available": true}   // WiFi
-{"amenity_id": 3, "is_available": true}   // Gym  
-{"amenity_id": 4, "is_available": true}   // Laundry
-{"amenity_id": 6, "is_available": true}   // Security
-{"amenity_id": 8, "is_available": true}   // Air Conditioning
-{"amenity_id": 9, "is_available": true}   // Study Room
+[
+  { "amenity_id": 1, "is_available": true },   // WiFi
+  { "amenity_id": 3, "is_available": true },   // Gym  
+  { "amenity_id": 4, "is_available": true },   // Laundry
+  { "amenity_id": 6, "is_available": true },   // Security
+  { "amenity_id": 8, "is_available": true },   // Air Conditioning
+  { "amenity_id": 9, "is_available": true }    // Study Room
+]
 ```
 
+---
+
 ### 3.7 Add Amenities to Hostel 2
+
 **POST** `/api/hostels/2/amenities`
+
 ```json
-{"amenity_id": 1, "is_available": true}   // WiFi
-{"amenity_id": 4, "is_available": true}   // Laundry  
-{"amenity_id": 6, "is_available": true}   // Security
-{"amenity_id": 7, "is_available": true}   // Parking
-{"amenity_id": 9, "is_available": true}   // Study Room
+[
+  { "amenity_id": 1, "is_available": true },   // WiFi
+  { "amenity_id": 4, "is_available": true },   // Laundry  
+  { "amenity_id": 6, "is_available": true },   // Security
+  { "amenity_id": 7, "is_available": true },   // Parking
+  { "amenity_id": 9, "is_available": true }    // Study Room
+]
 ```
+
+---
 
 ### 3.8 View Realtor's Hostels
 **GET** `/api/hostels/my-hostels`

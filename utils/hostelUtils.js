@@ -2,7 +2,7 @@
 const Hostel = require('../models/Hostel');
 const HostelRoom = require('../models/HostelRoom');
 const Amenity = require('../models/Amenity');
-
+const pool = require('../config/db')
 class HostelUtils {
   static async getHostelWithDetails(hostelId) {
     const hostel = await Hostel.findById(hostelId);
