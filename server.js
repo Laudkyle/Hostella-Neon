@@ -8,8 +8,7 @@ const path = require("path");
 
 
 // Load Swagger file
-const swaggerDocument = YAML.load(path.join(__dirname, "openapi.yaml"));
-
+const swaggerDocument = YAML.load(path.resolve("./openapi.yaml"));
 // Swagger docs route
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
