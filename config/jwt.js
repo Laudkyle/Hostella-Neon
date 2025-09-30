@@ -2,7 +2,7 @@ require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
-const JWT_SECRET = process.env.JWT_SECRET ;
+const JWT_SECRET = process.env.JWT_SECRET || "09f26e402586e2faa8da4c98a35f1b20d6b033c6097befa8be3486a829587fe2c90a8329013f3a234b8a093d9d1d3f5" ;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '30d';
 const SALT_ROUNDS = 10;
 
