@@ -1,0 +1,1002 @@
+openapi: 3.0.3
+info:
+  title: Hostel Management API
+  description: |
+    A comprehensive hostel management system supporting multiple user roles (Students, Realtors) 
+    with features for hostel listings, room management, amenities, and search functionality.
+  version: 1.0.0
+  contact:
+    email: support@hostella.com
+
+servers:
+  - url: https://hostella-neon.onrender.com
+    description: Production Server
+
+tags:
+  - name: Authentication
+    description: User registration, login, and verification
+  - name: Profile Management
+    description: User profile operations
+  - name: Hostel Management
+    description: CRUD operations for hostels (Realtor only)
+  - name: Room Management
+    description: Room creation and management (Realtor only)
+  - name: Amenity Management
+    description: Amenity creation and assignment
+  - name: Search & Discovery
+    description: Hostel search and filtering
+
+security:
+  - BearerAuth: []
+
+paths:
+  /api/auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: Register as either a student or realtor
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - firstName
+                - lastName
+                - phoneNumber
+                - role
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: realtor.john@example.com
+                password:
+                  type: string
+                  format: password
+                  example: password123
+                firstName:
+                  type: string
+                  example: John
+                lastName:
+                  type: string
+                  example: Smith
+                phoneNumber:
+                  type: string
+                  example: "+1234567890"
+                role:
+                  type: string
+                  enum: [student, realtor]
+                  example: realtor
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  userId:
+                    type: integer
+        '400':
+          description: Invalid input or user already exists
+
+  /api/auth/verify-otp:
+    post:
+      tags:
+        - Authentication
+      summary: Verify OTP
+      description: Verify the OTP sent to user's email/phone
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - otp
+              properties:
+                userId:
+                  type: integer
+                  example: 1
+                otp:
+                  type: string
+                  example: "123456"
+      responses:
+        '200':
+          description: OTP verified successfully
+        '400':
+          description: Invalid OTP
+
+  /api/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login user
+      description: Authenticate user and receive JWT token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: realtor.john@example.com
+                password:
+                  type: string
+                  format: password
+                  example: password123
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid credentials
+
+  /api/users/me:
+    get:
+      tags:
+        - Profile Management
+      summary: Get current user profile
+      description: Retrieve logged-in user's profile information
+      responses:
+        '200':
+          description: User profile retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+    
+    put:
+      tags:
+        - Profile Management
+      summary: Update user profile
+      description: Update current user's profile information
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                  example: John
+                lastName:
+                  type: string
+                  example: Smith
+                phoneNumber:
+                  type: string
+                  example: "+1234567899"
+      responses:
+        '200':
+          description: Profile updated successfully
+        '400':
+          description: Invalid input
+    
+    delete:
+      tags:
+        - Profile Management
+      summary: Delete user account
+      description: Permanently delete the current user's account
+      responses:
+        '200':
+          description: Account deleted successfully
+        '401':
+          description: Unauthorized
+
+  /api/realtors/company:
+    put:
+      tags:
+        - Profile Management
+      summary: Update realtor company
+      description: Update company name for realtor (Realtor only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - companyName
+              properties:
+                companyName:
+                  type: string
+                  example: Premium Student Housing Inc.
+      responses:
+        '200':
+          description: Company updated successfully
+        '403':
+          description: Not authorized (student attempting realtor action)
+
+  /api/students/enrollment:
+    put:
+      tags:
+        - Profile Management
+      summary: Update student enrollment
+      description: Update enrollment date for student (Student only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - enrollmentDate
+              properties:
+                enrollmentDate:
+                  type: string
+                  format: date
+                  example: "2024-09-01"
+      responses:
+        '200':
+          description: Enrollment updated successfully
+        '403':
+          description: Not authorized (realtor attempting student action)
+
+  /api/hostels:
+    get:
+      tags:
+        - Search & Discovery
+      summary: Browse all hostels
+      description: Get a list of all available hostels
+      security: []
+      responses:
+        '200':
+          description: List of hostels
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Hostel'
+    
+    post:
+      tags:
+        - Hostel Management
+      summary: Create hostel
+      description: Create a new hostel (Realtor only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - address
+                - description
+                - contact_email
+                - contact_phone
+              properties:
+                name:
+                  type: string
+                  example: University Heights Premium
+                address:
+                  type: string
+                  example: 123 College Avenue, Campus Town, CT 12345
+                description:
+                  type: string
+                  example: Modern student accommodation with premium amenities
+                contact_email:
+                  type: string
+                  format: email
+                  example: bookings@universityheights.com
+                contact_phone:
+                  type: string
+                  example: "+1-555-0101"
+      responses:
+        '201':
+          description: Hostel created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Hostel'
+        '403':
+          description: Forbidden (student attempting to create hostel)
+
+  /api/hostels/my-hostels:
+    get:
+      tags:
+        - Hostel Management
+      summary: Get realtor's hostels
+      description: Retrieve all hostels owned by the current realtor
+      responses:
+        '200':
+          description: List of realtor's hostels
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Hostel'
+        '403':
+          description: Forbidden (not a realtor)
+
+  /api/hostels/{hostelId}:
+    get:
+      tags:
+        - Search & Discovery
+      summary: Get hostel details
+      description: Retrieve detailed information about a specific hostel
+      security: []
+      parameters:
+        - name: hostelId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: Hostel details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Hostel'
+        '404':
+          description: Hostel not found
+    
+    put:
+      tags:
+        - Hostel Management
+      summary: Update hostel
+      description: Update hostel information (Realtor only - owner)
+      parameters:
+        - name: hostelId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: University Heights Elite
+                description:
+                  type: string
+                  example: Recently upgraded with new furniture
+                contact_phone:
+                  type: string
+                  example: "+1-555-0199"
+      responses:
+        '200':
+          description: Hostel updated successfully
+        '403':
+          description: Forbidden (not the owner)
+        '404':
+          description: Hostel not found
+    
+    delete:
+      tags:
+        - Hostel Management
+      summary: Delete hostel
+      description: Delete a hostel (Realtor only - owner)
+      parameters:
+        - name: hostelId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 2
+      responses:
+        '200':
+          description: Hostel deleted successfully
+        '403':
+          description: Forbidden (not the owner)
+        '404':
+          description: Hostel not found
+
+  /api/hostels/{hostelId}/rooms:
+    get:
+      tags:
+        - Search & Discovery
+      summary: Get hostel rooms
+      description: Retrieve all rooms for a specific hostel
+      security: []
+      parameters:
+        - name: hostelId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: List of rooms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Room'
+        '404':
+          description: Hostel not found
+    
+    post:
+      tags:
+        - Room Management
+      summary: Add room to hostel
+      description: Create a new room type for a hostel (Realtor only)
+      parameters:
+        - name: hostelId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - room_type
+                - price_per_year
+                - quantity_available
+              properties:
+                room_type:
+                  type: string
+                  enum: [single, double, three, four]
+                  example: single
+                price_per_year:
+                  type: number
+                  format: float
+                  example: 5200.00
+                quantity_available:
+                  type: integer
+                  example: 8
+      responses:
+        '201':
+          description: Room created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+        '403':
+          description: Forbidden (not the owner)
+
+  /api/hostels/{hostelId}/rooms/{roomId}:
+    put:
+      tags:
+        - Room Management
+      summary: Update room
+      description: Update room pricing and availability (Realtor only)
+      parameters:
+        - name: hostelId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                price_per_year:
+                  type: number
+                  format: float
+                  example: 5400.00
+                quantity_available:
+                  type: integer
+                  example: 7
+      responses:
+        '200':
+          description: Room updated successfully
+        '403':
+          description: Forbidden (not the owner)
+        '404':
+          description: Room not found
+    
+    delete:
+      tags:
+        - Room Management
+      summary: Delete room
+      description: Remove a room from a hostel (Realtor only)
+      parameters:
+        - name: hostelId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 3
+      responses:
+        '200':
+          description: Room deleted successfully
+        '403':
+          description: Forbidden (not the owner)
+        '404':
+          description: Room not found
+
+  /api/hostels/{hostelId}/rooms/{roomId}/quantity:
+    put:
+      tags:
+        - Room Management
+      summary: Update room quantity
+      description: Update only the available quantity for a room (Realtor only)
+      parameters:
+        - name: hostelId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+        - name: roomId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - quantity_available
+              properties:
+                quantity_available:
+                  type: integer
+                  example: 5
+      responses:
+        '200':
+          description: Quantity updated successfully
+        '403':
+          description: Forbidden (not the owner)
+
+  /api/amenities:
+    get:
+      tags:
+        - Search & Discovery
+      summary: Browse all amenities
+      description: Get a list of all available amenities
+      security: []
+      responses:
+        '200':
+          description: List of amenities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Amenity'
+    
+    post:
+      tags:
+        - Amenity Management
+      summary: Create amenity/amenities
+      description: Create one or multiple amenities (accepts object or array)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  required:
+                    - name
+                  properties:
+                    name:
+                      type: string
+                      example: WiFi
+                - type: array
+                  items:
+                    type: object
+                    required:
+                      - name
+                    properties:
+                      name:
+                        type: string
+                  example:
+                    - name: WiFi
+                    - name: Swimming Pool
+                    - name: Gym
+      responses:
+        '201':
+          description: Amenity/Amenities created successfully
+        '400':
+          description: Invalid input
+
+  /api/amenities/{amenityId}:
+    put:
+      tags:
+        - Amenity Management
+      summary: Update amenity
+      description: Update an amenity's information
+      parameters:
+        - name: amenityId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  example: High-Speed WiFi
+      responses:
+        '200':
+          description: Amenity updated successfully
+        '404':
+          description: Amenity not found
+
+  /api/amenities/{amenityId}/hostels:
+    get:
+      tags:
+        - Search & Discovery
+      summary: Get hostels with specific amenity
+      description: Find all hostels that have a specific amenity
+      security: []
+      parameters:
+        - name: amenityId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: List of hostels with this amenity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Hostel'
+
+  /api/hostels/{hostelId}/amenities:
+    get:
+      tags:
+        - Search & Discovery
+      summary: Get hostel amenities
+      description: Retrieve all amenities for a specific hostel
+      security: []
+      parameters:
+        - name: hostelId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: List of amenities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HostelAmenity'
+    
+    post:
+      tags:
+        - Amenity Management
+      summary: Add amenities to hostel
+      description: Assign multiple amenities to a hostel (Realtor only)
+      parameters:
+        - name: hostelId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                required:
+                  - amenity_id
+                  - is_available
+                properties:
+                  amenity_id:
+                    type: integer
+                    example: 1
+                  is_available:
+                    type: boolean
+                    example: true
+              example:
+                - amenity_id: 1
+                  is_available: true
+                - amenity_id: 3
+                  is_available: true
+      responses:
+        '201':
+          description: Amenities added successfully
+        '403':
+          description: Forbidden (not the owner)
+    
+    delete:
+      tags:
+        - Amenity Management
+      summary: Remove amenity from hostel
+      description: Remove a specific amenity from a hostel (Realtor only)
+      parameters:
+        - name: hostelId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amenity_id
+              properties:
+                amenity_id:
+                  type: integer
+                  example: 3
+      responses:
+        '200':
+          description: Amenity removed successfully
+        '403':
+          description: Forbidden (not the owner)
+
+  /api/search/hostels:
+    get:
+      tags:
+        - Search & Discovery
+      summary: Search hostels with filters
+      description: Search hostels by room type, price, and amenities
+      security: []
+      parameters:
+        - name: roomType
+          in: query
+          schema:
+            type: string
+            enum: [single, double, three, four]
+          example: single
+        - name: maxPrice
+          in: query
+          schema:
+            type: number
+            format: float
+          example: 3000
+        - name: amenities
+          in: query
+          schema:
+            type: array
+            items:
+              type: integer
+          style: form
+          explode: true
+          example: [1, 3, 8]
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Hostel'
+
+  /api/search/hostels/{hostelId}/details:
+    get:
+      tags:
+        - Search & Discovery
+      summary: Get complete hostel details
+      description: Get comprehensive information about a hostel including rooms and amenities
+      security: []
+      parameters:
+        - name: hostelId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: Complete hostel details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Hostel'
+                  - type: object
+                    properties:
+                      rooms:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Room'
+                      amenities:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/HostelAmenity'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Enter your JWT token in the format **Bearer &lt;token&gt;**
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        email:
+          type: string
+          format: email
+          example: realtor.john@example.com
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: Smith
+        phoneNumber:
+          type: string
+          example: "+1234567890"
+        role:
+          type: string
+          enum: [student, realtor]
+          example: realtor
+        isVerified:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+
+    Hostel:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: University Heights Premium
+        address:
+          type: string
+          example: 123 College Avenue, Campus Town, CT 12345
+        description:
+          type: string
+          example: Modern student accommodation with premium amenities
+        contact_email:
+          type: string
+          format: email
+          example: bookings@universityheights.com
+        contact_phone:
+          type: string
+          example: "+1-555-0101"
+        realtor_id:
+          type: integer
+          example: 1
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Room:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        hostel_id:
+          type: integer
+          example: 1
+        room_type:
+          type: string
+          enum: [single, double, three, four]
+          example: single
+        price_per_year:
+          type: number
+          format: float
+          example: 5200.00
+        quantity_available:
+          type: integer
+          example: 8
+        createdAt:
+          type: string
+          format: date-time
+
+    Amenity:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: WiFi
+        createdAt:
+          type: string
+          format: date-time
+
+    HostelAmenity:
+      type: object
+      properties:
+        hostel_id:
+          type: integer
+          example: 1
+        amenity_id:
+          type: integer
+          example: 1
+        amenity_name:
+          type: string
+          example: WiFi
+        is_available:
+          type: boolean
+          example: true
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Error message
+        message:
+          type: string
+          example: Detailed error description

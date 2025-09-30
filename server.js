@@ -2,6 +2,16 @@ const app = require('./app');
 const { pool } = require('./config/db');
 
 const PORT = process.env.PORT || 5000;
+const swaggerUi = require("swagger-ui-express");
+const YAML = require("yamljs");
+const path = require("path");
+
+
+// Load Swagger file
+const swaggerDocument = YAML.load(path.join(__dirname, "openapi.yaml"));
+
+// Swagger docs route
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Start server
 app.listen(PORT, () => {
