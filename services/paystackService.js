@@ -12,9 +12,9 @@ class PaystackService {
         `${this.baseURL}/transaction/initialize`,
         {
           email,
-          amount: amount * 100, // Convert to kobo
+          amount: amount * 100, 
           reference,
-          currency: 'NGN',
+          currency: 'GHS',
           metadata
         },
         {
