@@ -23,7 +23,7 @@ router.get('/:id/hostels', amenityController.getHostelsWithAmenity);
 // @desc    Create new amenity
 // @access  Private (Add admin auth if needed)
 router.post(
-  '/',
+  '/',auth,
   [
     // auth, // Uncomment if you want to protect this route
     check('name', 'Amenity name is required').not().isEmpty()
@@ -35,7 +35,7 @@ router.post(
 // @desc    Update amenity
 // @access  Private (Add admin auth if needed)
 router.put(
-  '/:id',
+  '/:id',auth,
   [
     // auth, // Uncomment if you want to protect this route
     check('name', 'Amenity name is required').not().isEmpty()
@@ -46,6 +46,6 @@ router.put(
 // @route   DELETE /api/amenities/:id
 // @desc    Delete amenity
 // @access  Private (Add admin auth if needed)
-router.delete('/:id', amenityController.deleteAmenity);
+router.delete('/:id',auth, amenityController.deleteAmenity);
 
 module.exports = router;
