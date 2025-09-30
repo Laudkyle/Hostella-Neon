@@ -182,20 +182,45 @@ A comprehensive hostel management system supporting multiple user roles (Student
 }
 ```
 
+---
+
 ### 3.5 Create Amenities (One-time setup)
+
 **POST** `/api/amenities`
+
+You can create amenities individually or in bulk.
+
+#### ➡️ Single amenity
+
 ```json
-{"name": "WiFi"}
-{"name": "Swimming Pool"}
-{"name": "Gym"}
-{"name": "Laundry"}
-{"name": "Cafeteria"}
-{"name": "Security"}
-{"name": "Parking"}
-{"name": "Air Conditioning"}
-{"name": "Study Room"}
-{"name": "Game Room"}
+{
+  "name": "WiFi"
+}
 ```
+
+#### ➡️ Multiple amenities
+
+```json
+[
+  { "name": "WiFi" },
+  { "name": "Swimming Pool" },
+  { "name": "Gym" },
+  { "name": "Laundry" },
+  { "name": "Cafeteria" },
+  { "name": "Security" },
+  { "name": "Parking" },
+  { "name": "Air Conditioning" },
+  { "name": "Study Room" },
+  { "name": "Game Room" }
+]
+```
+
+✅ Both formats are supported.
+
+* Sending an **object** creates a single amenity.
+* Sending an **array of objects** creates multiple amenities in one request.
+
+---
 
 ### 3.6 Add Amenities to Hostel 1
 **POST** `/api/hostels/1/amenities`
