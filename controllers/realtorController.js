@@ -2,7 +2,8 @@ const Realtor = require('../models/Realtor');
 
 exports.getRealtorProfile = async (req, res, next) => {
   try {
-    if (req.user.role !== 'realtor') {
+    if (!['realtor', 'admin'].includes(req.user.role))
+ {
       return res.status(403).json({ message: 'Access denied' });
     }
     
@@ -19,7 +20,8 @@ exports.getRealtorProfile = async (req, res, next) => {
 
 exports.updateCompany = async (req, res, next) => {
   try {
-    if (req.user.role !== 'realtor') {
+    if (!['realtor', 'admin'].includes(req.user.role))
+ {
       return res.status(403).json({ message: 'Access denied' });
     }
     

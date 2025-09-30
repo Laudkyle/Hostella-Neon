@@ -17,7 +17,8 @@ exports.getRoomById = async (req, res, next) => {
 // Create room for hostel (realtor only)
 exports.createRoom = async (req, res, next) => {
   try {
-    if (req.user.role !== 'realtor') {
+    if (!['realtor', 'admin'].includes(req.user.role))
+ {
       return res.status(403).json({ message: 'Access denied. Realtors only.' });
     }
 
@@ -65,7 +66,8 @@ exports.createRoom = async (req, res, next) => {
 // Update room (realtor only)
 exports.updateRoom = async (req, res, next) => {
   try {
-    if (req.user.role !== 'realtor') {
+    if (!['realtor', 'admin'].includes(req.user.role))
+ {
       return res.status(403).json({ message: 'Access denied. Realtors only.' });
     }
 
@@ -104,7 +106,8 @@ exports.updateRoom = async (req, res, next) => {
 // Update room quantity (realtor only)
 exports.updateRoomQuantity = async (req, res, next) => {
   try {
-    if (req.user.role !== 'realtor') {
+    if (!['realtor', 'admin'].includes(req.user.role))
+ {
       return res.status(403).json({ message: 'Access denied. Realtors only.' });
     }
 
@@ -139,7 +142,8 @@ exports.updateRoomQuantity = async (req, res, next) => {
 // Delete room (realtor only)
 exports.deleteRoom = async (req, res, next) => {
   try {
-    if (req.user.role !== 'realtor') {
+    if (!['realtor', 'admin'].includes(req.user.role))
+ {
       return res.status(403).json({ message: 'Access denied. Realtors only.' });
     }
 
