@@ -1,58 +1,61 @@
 const jwt = require('jsonwebtoken');
 const jwtConfig = require('../config/jwt');
-const { pool } = require('../config/db');
+const pool  = require('../config/db');
 
 module.exports = async (req, res, next) => {
-  // Get token from header
   let token;
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
-  ) {
+
+  // Extract token
+  if (req.headers.authorization?.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
   } else if (req.cookies?.token) {
     token = req.cookies.token;
   }
 
-  // Check if no token
+  // No token
   if (!token) {
     return res.status(401).json({ 
       success: false,
-      message: 'Not authorized to access this route' ,
-      error: "No token present"
+      message: 'Not authorized to access this route',
+      error: 'No token present'
     });
   }
 
   try {
     // Verify token
-    const decoded = jwt.verify(token, jwtConfig.secret);
-    
-    // Check if user still exists
-    const [user] = await pool.query(
-      'SELECT id, email, role, is_active FROM users WHERE id = ?', 
+    const decoded = jwt.verify(token, jwtConfig.JWT_SECRET);
+    console.log('Decoded JWT:', decoded);
+
+    // Query Postgres
+    const result = await pool.query(
+      'SELECT id, email, role, is_active FROM users WHERE id = $1',
       [decoded.id]
     );
-    
-    if (!user[0] || !user[0].is_active) {
+    console.log('Query result:', result.rows);
+
+    const user = result.rows[0]; // ✅ correct way for pg
+
+    if (!user || !user.is_active) {
       return res.status(401).json({
         success: false,
-        message: 'The user belonging to this token no longer exists'
+        message: 'The user belonging to this token no longer exists or is inactive'
       });
     }
 
-    // Add user to request object
+    // Attach user to request
     req.user = {
-      id: user[0].id,
-      email: user[0].email,
-      role: user[0].role
+      id: user.id,
+      email: user.email,
+      role: user.role
     };
 
     next();
   } catch (err) {
+    console.error('JWT middleware error:', err);
     return res.status(401).json({
       success: false,
       message: 'Not authorized to access this route',
-      error:err,
+      error: err.message
     });
   }
 };
