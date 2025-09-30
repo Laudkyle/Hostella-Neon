@@ -27,9 +27,9 @@ exports.getAmenityById = async (req, res, next) => {
 exports.createAmenity = async (req, res, next) => {
   try {
     // Add admin check if you have admin role
-    // if (req.user.role !== 'admin') {
-    //   return res.status(403).json({ message: 'Access denied. Admin only.' });
-    // }
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied. Admin only.' });
+    }
 
     const { name } = req.body;
     

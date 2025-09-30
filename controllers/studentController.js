@@ -2,7 +2,8 @@ const Student = require('../models/Student')
 
 exports.getStudentProfile = async (req, res, next) => {
   try {
-    if (req.user.role !== 'student') {
+    if (!['student', 'admin'].includes(req.user.role))
+ {
       return res.status(403).json({ message: 'Access denied' });
     }
     
@@ -19,7 +20,8 @@ exports.getStudentProfile = async (req, res, next) => {
 
 exports.updateEnrollmentDate = async (req, res, next) => {
   try {
-    if (req.user.role !== 'student') {
+    if (!['student', 'admin'].includes(req.user.role))
+ {
       return res.status(403).json({ message: 'Access denied' });
     }
     
