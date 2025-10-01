@@ -5,19 +5,43 @@ class SharedReservation {
     const { 
       reservation_id, 
       user_id, 
-      share_amount 
+      share_amount,
+      payment_status = 'pending'
     } = sharedData;
 
-    const queryText = `
-      INSERT INTO shared_reservations 
-      (reservation_id, user_id, share_amount) 
-      VALUES ($1, $2, $3) 
-      RETURNING *
-    `;
-    
-    const values = [reservation_id, user_id, share_amount];
-    
-    const { rows } = await pool.query(queryText, values);
+    try {
+      const queryText = `
+        INSERT INTO reservation_participants 
+        (reservation_id, user_id, share_amount, payment_status) 
+        VALUES ($1, $2, $3, $4) 
+        RETURNING *
+      `;
+      
+      const values = [reservation_id, user_id, share_amount, payment_status];
+      
+      const { rows } = await pool.query(queryText, values);
+      return rows[0];
+    } catch (error) {
+      if (error.code === '23503') { // Foreign key violation
+        if (error.constraint === 'reservation_participants_user_id_fkey') {
+          throw new Error(`User with ID ${user_id} does not exist`);
+        } else if (error.constraint === 'reservation_participants_reservation_id_fkey') {
+          throw new Error(`Reservation with ID ${reservation_id} does not exist`);
+        }
+      }
+      throw error;
+    }
+  }
+
+  // Method to handle shared user payment
+  static async processSharedUserPayment(reservationId, userId) {
+    const { rows } = await pool.query(
+      `UPDATE reservation_participants 
+       SET payment_status = 'paid' 
+       WHERE reservation_id = $1 AND user_id = $2 
+       RETURNING *`,
+      [reservationId, userId]
+    );
     return rows[0];
   }
 
