@@ -31,7 +31,7 @@ exports.initializeReservation = async (req, res, next) => {
       });
     }
 
-    // Calculate total price
+    // Calculate total price - NO division for single user
     const totalAmount = await Reservation.calculateTotalPrice(
       hostel_room_id, 
       start_date, 
@@ -51,28 +51,43 @@ exports.initializeReservation = async (req, res, next) => {
 
     const reservation = await Reservation.create(reservationData);
 
-    // Create shared reservations if any
+    // Create shared reservations if any - with individual pricing
     if (shared_users.length > 0) {
-      const shareAmount = totalAmount / (shared_users.length + 1); // +1 for the main user
+      // Each shared user pays their full share (total divided by total participants)
+      const totalParticipants = shared_users.length + 1; // +1 for the main user
+      const individualShare = totalAmount / totalParticipants;
       
       for (const sharedUserId of shared_users) {
         await SharedReservation.create({
           reservation_id: reservation.id,
           user_id: sharedUserId,
-          share_amount: shareAmount
+          share_amount: individualShare,
+          payment_status: 'pending'
         });
       }
+      
+      // Main user also pays their share (this will be handled in the payment)
+      // The main user's payment covers their individual share
     }
 
-    // Initialize Paystack payment
+    // Initialize Paystack payment - amount depends on whether sharing or not
+    let paymentAmount = totalAmount;
+    
+    // If sharing, main user only pays their individual share initially
+    if (shared_users.length > 0) {
+      paymentAmount = totalAmount / (shared_users.length + 1);
+    }
+
     const reference = PaystackService.generateReference();
     const paymentResponse = await PaystackService.initializeTransaction(
       req.user.email,
-      totalAmount,
+      paymentAmount, // Use calculated payment amount
       reference,
       {
         reservation_id: reservation.id,
         user_id: req.user.id,
+        shared_users_count: shared_users.length,
+        is_shared: shared_users.length > 0,
         custom_fields: [
           {
             display_name: "Reservation ID",
@@ -86,7 +101,7 @@ exports.initializeReservation = async (req, res, next) => {
     // Store payment record
     await Payment.create({
       reservation_id: reservation.id,
-      amount: totalAmount,
+      amount: paymentAmount,
       payment_method: 'paystack',
       transaction_id: reference
     });
@@ -96,12 +111,16 @@ exports.initializeReservation = async (req, res, next) => {
       reservation,
       payment_url: paymentResponse.data.authorization_url,
       reference,
-      amount: totalAmount
+      amount: paymentAmount,
+      total_amount: totalAmount,
+      is_shared: shared_users.length > 0,
+      shared_users_count: shared_users.length
     });
   } catch (error) {
     next(error);
   }
 };
+
 
 // Verify payment and confirm reservation
 exports.verifyPayment = async (req, res, next) => {
@@ -139,6 +158,9 @@ exports.verifyPayment = async (req, res, next) => {
       payment_date: new Date()
     });
 
+    // DECREASE ROOM QUANTITY AVAILABLE
+    await decreaseRoomQuantity(updatedReservation.hostel_room_id);
+
     // Get full reservation details
     const reservation = await Reservation.findById(payment.reservation_id);
 
@@ -151,7 +173,6 @@ exports.verifyPayment = async (req, res, next) => {
     next(error);
   }
 };
-
 // Get user's reservations
 exports.getMyReservations = async (req, res, next) => {
   try {
